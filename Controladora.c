@@ -1,12 +1,15 @@
 #define aeroporto 0.5
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include<time.h>
-#include<math.h>
+#include <time.h>
+#include <math.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
 
 typedef struct
 {
@@ -44,19 +47,7 @@ typedef struct
     int pista;
 }Parcela;
 
-
-
-
-int main(void){
-    Aeronave* aeronave;
-    cria_aeronave(aeronave);
-    
-
-
-
-    return 0;
-}
-
+//Funcoes filho
 void cria_aeronave(Aeronave* aeronave){
     // Inicializa a semente do gerador com o tempo atual
     srand(time(NULL));
@@ -91,7 +82,50 @@ void atualizar_memoria(Aeronave* aeronave, Parcela* p, int posicao){
     p[posicao] = parcela;
 }
 
-void comeca();
-void pausa();
-void continua();
-void atualiza_pos();
+
+int main(void){
+    int segmento, qtd_aeronaves, pid, tamanho_alocado;
+    int* p, * lpid;
+
+    // numero de processos filhos
+    printf("Quantas aeronaves: \n");
+    scanf("%d", &qtd_aeronaves);
+
+    tamanho_alocado = sizeof(Parcela) * qtd_aeronaves;
+
+    // aloca a memória compartilhada
+    segmento = shmget (IPC_PRIVATE, tamanho_alocado, IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR);
+
+    //if (lpid = (int*)malloc(sizeof(int)*qtd_aeronaves) == NULL){
+    //    exit(-1); 
+    //}
+
+    // associa a memória compartilhada ao processo
+    if( p = (Parcela *) shmat (segmento, 0, 0) == -1){
+        exit(-3);
+    } 
+
+
+    for (int i = 0; i < qtd_aeronaves; i++){
+        if (pid = fork() == NULL){
+            exit(-2);
+        }        
+
+        if(pid = 0){ // filho
+            // associa a memória compartilhada ao processo
+            if( p = (Parcela *) shmat (segmento, 0, 0) == -1){
+                exit(-3);
+            } 
+            Aeronave* aeronave;
+            cria_aeronave(aeronave);
+            atualizar_memoria(aeronave, p, i);
+
+        }
+        else{
+            lpid[i] = pid;
+        }
+    }
+
+
+    return 0;
+}

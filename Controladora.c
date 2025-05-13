@@ -144,6 +144,11 @@ void tratador2(int sig){  // tratador para SIGUSR2
 
 
 // Funcoes do pai
+
+int troca_pista(int pista){
+
+}
+
 // verifica provaveis colisoes
 void radar(){
     int pista = p[i].pista;
@@ -173,12 +178,59 @@ void radar(){
                                 radar();
                             }
                             else{
+                                kill(lpid[i], SIGUSR2); // troca pista
+                                printf("pid: %d voltei para pista original\n", lpid[i]);
                                 printf("pid: %d pausei\n", lpid[i]);
                                 kill(lpid[i], SIGUSR1); // pausa
                             }
                             return;
                         }
                     }
+                }
+            }
+        }
+    } 
+}
+
+
+void radar(){
+    int pista = p[i].pista;
+    if (trocou_pista == 1){     // troca a pista localmente
+        if (pista == 0)
+            pista = 1;
+        else
+            pista = 0;
+    }
+    Coordenada c = p[i].c_atual;
+    for(int s = 0; s < qtd_aeronaves; s++){
+        if (s != i){                            // verifica se nao eh ele mesmo
+            if (p[s].pista == pista){           // verifica se sao vizinhos de quadrante 
+                if (kill(lpid[s], 0) == 0){     // verifica se vizinho esta vivo
+                    if(proximo)                 // verifica se esta proximo
+                        if (frente)
+                    
+                        if (((fabsf(p[s].c_atual.x - c.x)) < 0.1) && ((fabsf(p[s].c_atual.y - c.y)) < 0.1)){
+                            printf("pid: %d, pista: %d, x: %.2f, y: %.2f\n", lpid[i], pista, c.x, c.y);
+                            printf("pid: %d morreu\n", lpid[i]);
+                            kill(lpid[i], SIGKILL); // pouso
+                            return;
+                        }
+                        if (((fabsf(p[s].c_atual.x - c.x)) <= 0.2) && ((fabsf(p[s].c_atual.y - c.y)) <= 0.2)){
+                            if (trocou_pista == 0){
+                                kill(lpid[i], SIGUSR2); // troca pista
+                                trocou_pista = 1;
+                                printf("pid: %d trocou pista\n", lpid[i]);
+                                radar();
+                            }
+                            else{
+                                kill(lpid[i], SIGUSR2); // troca pista
+                                printf("pid: %d voltei para pista original\n", lpid[i]);
+                                printf("pid: %d pausei\n", lpid[i]);
+                                kill(lpid[i], SIGUSR1); // pausa
+                            }
+                            return;
+                        }
+                    
                 }
             }
         }
